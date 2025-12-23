@@ -15,33 +15,11 @@ Protected Module PubSub
 		  // Loop through all subscribed targets
 		  For Each target As Object In eventDict.Keys
 		    // Get callbacks for this target
-		    Var callbacks() As String = eventDict.Value(target)
+		    Var callbacks() As EventCallback = eventDict.Value(target)
 		    
-		    // Call each callback method on the target
-		    For Each callbackName As String In callbacks
-		      Try
-		        Var ti As Introspection.TypeInfo = Introspection.GetType(target)
-		        Var methods() As Introspection.MethodInfo = ti.GetMethods
-		        
-		        For Each mi As Introspection.MethodInfo In methods
-		          If mi.Name = callbackName Then
-		            // Call with or without parameter depending on method signature
-		            Var params() As Introspection.ParameterInfo = mi.GetParameters
-		            If params.Count = 0 Then
-		              mi.Invoke(target)
-		            Else
-		              // Pass parameters as an array
-		              Var args() As Variant
-		              args.Add(data)
-		              mi.Invoke(target, args)
-		            End If
-		            Exit For mi
-		          End If
-		        Next
-		        
-		      Catch e As RuntimeException
-		        // Silently ignore if method doesn't exist or can't be called
-		      End Try
+		    // Call each callback - simple and fast!
+		    For Each callback As EventCallback In callbacks
+		      callback.Invoke(data)
 		    Next
 		  Next
 		End Sub
@@ -76,7 +54,7 @@ Protected Module PubSub
 		  End If
 		  
 		  // Get or create the target's callback array
-		  Var callbacks() As String
+		  Var callbacks() As EventCallback
 		  
 		  If eventDict.HasKey(target) Then
 		    callbacks = eventDict.Value(target)
@@ -105,26 +83,42 @@ Protected Module PubSub
 		  // Check if target exists for this event
 		  If Not eventDict.HasKey(target) Then Return
 		  
-		  // If no callback specified, remove all callbacks for this target
-		  If callbackMethod = "" Then
+		  // Get callbacks for this target
+		  Var callbacks() As EventCallback = eventDict.Value(target)
+		  Var newCallbacks() As EventCallback
+		  
+		  // Remove the specific callback
+		  For Each cb As EventCallback In callbacks
+		    // Compare delegate references (this works in Xojo)
+		    If Not (cb = callback) Then
+		      newCallbacks.Add(cb)
+		    End If
+		  Next
+		  
+		  // If no callbacks left, remove the target entirely
+		  If newCallbacks.Count = 0 Then
 		    eventDict.Remove(target)
 		  Else
-		    // Remove specific callback
-		    Var callbacks() As String = eventDict.Value(target)
-		    Var newCallbacks() As String
-		    
-		    For Each cb As String In callbacks
-		      If cb <> callbackMethod Then
-		        newCallbacks.Add(cb)
-		      End If
-		    Next
-		    
-		    // If no callbacks left, remove the target entirely
-		    If newCallbacks.Count = 0 Then
-		      eventDict.Remove(target)
-		    Else
-		      eventDict.Value(target) = newCallbacks
-		    End If
+		    eventDict.Value(target) = newCallbacks
+		  End If
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub UnsubscribeAll(eventName As String, target As Object)
+		  ' Unsubscribe all callbacks for a target from an event
+		  
+		  // Initialize if needed
+		  If mSubscriptions = Nil Then mSubscriptions = New Dictionary
+		  
+		  // Check if event exists
+		  If Not mSubscriptions.HasKey(eventName) Then Return
+		  
+		  Var eventDict As Dictionary = mSubscriptions.Value(eventName)
+		  
+		  // Remove target if it exists
+		  If eventDict.HasKey(target) Then
+		    eventDict.Remove(target)
 		  End If
 		End Sub
 	#tag EndMethod
@@ -138,7 +132,7 @@ Protected Module PubSub
 		  
 		  // Loop through all events
 		  For Each eventName As String In mSubscriptions.Keys
-		    Dim eventDict As Dictionary = mSubscriptions.Value(eventName)
+		    Var eventDict As Dictionary = mSubscriptions.Value(eventName)
 		    
 		    If eventDict.HasKey(target) Then
 		      eventDict.Remove(target)
