@@ -26,4 +26,11 @@ End Sub
 // In Opening event or a button:
 PubSub.Subscribe("TestEvent", "HandleDataChanged", Self)
 PubSub.Broadcast("TestEvent", "Hello World!")
+
+// Test unsubscribe
+PubSub.Unsubscribe("TestEvent", "HandleDataChanged", Self)
+PubSub.Broadcast("TestEvent", "Should not appear") // Won't trigger
+
+// Or test removing all
+PubSub.RemoveAllSubscriptions()
 ```
