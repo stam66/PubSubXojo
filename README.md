@@ -13,7 +13,7 @@ The module includes 6 methods:
 - `Subscribe(eventName As String, callback As EventCallback, target As Object)` _Subscribe an object to a message that may be broadcast_
 - `Broadcast(eventName As String, data As Variant = Nil)` _Broadcast a message to all subscribed objects_
 - `Unsubscribe(eventName As String, callback As EventCallback, target As Object)` _Unsubscribe an object from a specific messaage that may be broadcast_
-- `UnsubscribeAll(eventName As String, target As Object)` _Unsubscribe all callbacks for a target from an event___
+- `UnsubscribeAll(eventName As String, target As Object)` _Unsubscribe all callbacks for a target from an event_
 - `UnsubscribeTarget(target As Object)` _Remove all subscriptions for a target across all events_
 - `RemoveAllSubscriptions()`  
 
