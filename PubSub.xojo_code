@@ -2,7 +2,7 @@
 Protected Module PubSub
 	#tag Method, Flags = &h0
 		Sub Broadcast(eventName As String, data As Variant = Nil)
-		  ' Public Sub Broadcast(eventName As String, data As Variant = Nil)
+		  'Broadcast an event to all subscribers
 		  
 		  // Initialize if needed
 		  If mSubscriptions = Nil Then mSubscriptions = New Dictionary
@@ -15,48 +15,31 @@ Protected Module PubSub
 		  // Loop through all subscribed targets
 		  For Each target As Object In eventDict.Keys
 		    // Get callbacks for this target
-		    Dim callbacks() As String = eventDict.Value(target)
+		    Dim callbacks() As EventCallback = eventDict.Value(target)
 		    
-		    // Call each callback method on the target
-		    For Each callbackName As String In callbacks
-		      Try
-		        Dim ti As Introspection.TypeInfo = Introspection.GetType(target)
-		        Dim methods() As Introspection.MethodInfo = ti.GetMethods
-		        
-		        For Each mi As Introspection.MethodInfo In methods
-		          If mi.Name = callbackName Then
-		            // Call with or without parameter depending on method signature
-		            Dim params() As Introspection.ParameterInfo = mi.GetParameters
-		            If params.Count = 0 Then
-		              mi.Invoke(target)
-		            Else
-		              // Pass parameters as an array
-		              Dim args() As Variant
-		              args.Add(data)
-		              mi.Invoke(target, args)
-		            End If
-		            Exit For mi
-		          End If
-		        Next
-		        
-		      Catch e As RuntimeException
-		        // Silently ignore if method doesn't exist or can't be called
-		      End Try
+		    // Call each callback - simple and fast!
+		    For Each callback As EventCallback In callbacks
+		      callback.Invoke(data)
 		    Next
 		  Next
-		  
 		End Sub
 	#tag EndMethod
 
+	#tag DelegateDeclaration, Flags = &h0, Description = 416C6C2063616C6C6261636B206D6574686F6473206D7573742074616B65203120706172616D657465722061732076617269616E74
+		Delegate Sub EventCallback(data As Variant)
+	#tag EndDelegateDeclaration
+
 	#tag Method, Flags = &h0
 		Sub RemoveAllSubscriptions()
+		  '  Remove all subscriptions
+		  
 		  mSubscriptions = New Dictionary
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Subscribe(eventName As String, callbackMethod As String, target As Object)
-		  ' Public Sub Subscribe(eventName As String, callbackMethod As String, target As Object)
+		Sub Subscribe(eventName As String, callback As EventCallback, target As Object)
+		  ' Subscribe to an event
 		  
 		  // Initialize if needed
 		  If mSubscriptions = Nil Then mSubscriptions = New Dictionary
@@ -71,16 +54,14 @@ Protected Module PubSub
 		  End If
 		  
 		  // Get or create the target's callback array
-		  Dim callbacks() As String
+		  Dim callbacks() As EventCallback
 		  
 		  If eventDict.HasKey(target) Then
 		    callbacks = eventDict.Value(target)
 		  End If
 		  
-		  // Add callback if not already present
-		  If callbacks.IndexOf(callbackMethod) = -1 Then
-		    callbacks.Add(callbackMethod)
-		  End If
+		  // Add callback
+		  callbacks.Add(callback)
 		  
 		  eventDict.Value(target) = callbacks
 		  
@@ -88,9 +69,8 @@ Protected Module PubSub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Unsubscribe(eventName As String, callbackMethod As String = "", target As Object)
-		  ' Public Sub Unsubscribe(eventName As String, callbackMethod As String = "", target As Object)
-		  
+		Sub Unsubscribe(eventName As String, callback As EventCallback, target As Object)
+		  '   Unsubscribe from an event
 		  
 		  // Initialize if needed
 		  If mSubscriptions = Nil Then mSubscriptions = New Dictionary
@@ -103,38 +83,71 @@ Protected Module PubSub
 		  // Check if target exists for this event
 		  If Not eventDict.HasKey(target) Then Return
 		  
-		  // If no callback specified, remove all callbacks for this target
-		  If callbackMethod = "" Then
+		  // Get callbacks for this target
+		  Dim callbacks() As EventCallback = eventDict.Value(target)
+		  Dim newCallbacks() As EventCallback
+		  
+		  // Remove the specific callback
+		  For Each cb As EventCallback In callbacks
+		    // Compare delegate references (this works in Xojo)
+		    If Not (cb = callback) Then
+		      newCallbacks.Add(cb)
+		    End If
+		  Next
+		  
+		  // If no callbacks left, remove the target entirely
+		  If newCallbacks.Count = 0 Then
 		    eventDict.Remove(target)
 		  Else
-		    // Remove specific callback
-		    Dim callbacks() As String = eventDict.Value(target)
-		    Dim newCallbacks() As String
-		    
-		    For Each cb As String In callbacks
-		      If cb <> callbackMethod Then
-		        newCallbacks.Add(cb)
-		      End If
-		    Next
-		    
-		    // If no callbacks left, remove the target entirely
-		    If newCallbacks.Count = 0 Then
-		      eventDict.Remove(target)
-		    Else
-		      eventDict.Value(target) = newCallbacks
-		    End If
+		    eventDict.Value(target) = newCallbacks
 		  End If
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub UnsubscribeAll(eventName As String, target As Object)
+		  ' Unsubscribe all callbacks for a target from an event
 		  
+		  // Initialize if needed
+		  If mSubscriptions = Nil Then mSubscriptions = New Dictionary
+		  
+		  // Check if event exists
+		  If Not mSubscriptions.HasKey(eventName) Then Return
+		  
+		  Dim eventDict As Dictionary = mSubscriptions.Value(eventName)
+		  
+		  // Remove target if it exists
+		  If eventDict.HasKey(target) Then
+		    eventDict.Remove(target)
+		  End If
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub UnsubscribeTarget(target As Object)
+		  ' Remove all subscriptions for a target across all events
+		  
+		  // Initialize if needed
+		  If mSubscriptions = Nil Then mSubscriptions = New Dictionary
+		  
+		  // Loop through all events
+		  For Each eventName As String In mSubscriptions.Keys
+		    Dim eventDict As Dictionary = mSubscriptions.Value(eventName)
+		    
+		    If eventDict.HasKey(target) Then
+		      eventDict.Remove(target)
+		    End If
+		  Next
 		End Sub
 	#tag EndMethod
 
 
-	#tag Property, Flags = &h0
+	#tag Property, Flags = &h21
 		#tag Note
-			// Structure: Dictionary[EventName:String] -> Dictionary[Target:WeakRef] -> String() of callback method names
 			
+			// Structure: Dictionary[EventName:String] -> Dictionary[Target:Object] -> EventCallback()
 		#tag EndNote
-		mSubscriptions As Dictionary
+		Private mSubscriptions As Dictionary
 	#tag EndProperty
 
 
