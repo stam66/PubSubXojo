@@ -12,6 +12,5 @@ The module includes 4 methods:
 - **Public Sub RemoveAllSubscriptions()**  
 
 
-The module has a private property to store subscriptions:  
-**Private mSubscriptions As Dictionary**  
+The module has a private property to store subscriptions: **Private mSubscriptions As Dictionary**  
 _Dictionary structure: Dictionary[EventName:String] -> Dictionary[Target:WeakRef] -> String() of callback method names_
