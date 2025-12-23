@@ -1,6 +1,6 @@
 # PubSubXojo  
   
-Publish-Subscribe module for Xojo. Ported my my LiveCode version of the same: https://github.com/stam66/skPubSub (if anything highlights the elegance of LiveCodeScript compared to the tortuous verbosity often needed in Xojo). A simple way to avoid raising convoluted events and event handlers especially where unrelated objects need to react to the same message. Now changed to delegate based module for type safety and speed.
+PubSub is a very simple Publish-Subscribe module for Xojo. Ported my my LiveCode version of the same: https://github.com/stam66/skPubSub (if anything highlights the elegance of LiveCodeScript compared to the tortuous verbosity often needed in Xojo). A simple way to avoid raising convoluted events and event handlers especially where unrelated objects need to react to the same message. Now changed to delegate based module for type safety and speed. Limitations include not being thread-safe, use at your own risk broadcasting inside a thread.
 
 The module implements a delegate:
 Delegate: `EventCallback(data As Variant)`  
