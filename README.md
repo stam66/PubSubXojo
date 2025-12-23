@@ -1,6 +1,6 @@
-# PubSubXojo
-
-Publish-Subscribe module for Xojo. Ported my my LiveCode version of the same: https://github.com/stam66/skPubSub (if anything highlights the elegance of LiveCodeScript).
+# PubSubXojo  
+  
+Publish-Subscribe module for Xojo. Ported my my LiveCode version of the same: https://github.com/stam66/skPubSub (if anything highlights the elegance of LiveCodeScript compared to the tortuous verbosity often needed in Xojo). A simple way to avoid raising convoluted events and event handlers especially where unrelated objects need to react to the same message.
 
 The module includes 4 methods:
 - **Public Sub Subscribe(eventName As String, callbackMethod As String, target As Object)** to register an object to receive notification
@@ -13,10 +13,11 @@ The module includes 4 methods:
 
 
 The module has a private property to store subscriptions: **Private mSubscriptions As Dictionary**  
-_Dictionary structure: Dictionary[EventName:String] -> Dictionary[Target:WeakRef] -> String() of callback method names_
+_Dictionary structure: Dictionary[EventName:String] -> Dictionary[Target:WeakRef] -> String() of callback method names_  
 
+---
 
-## Example usage
+### Example usage
 ```
 // Add a method to your WebPage
 Public Sub HandleDataChanged(data As Variant)
