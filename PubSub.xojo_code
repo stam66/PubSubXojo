@@ -10,28 +10,28 @@ Protected Module PubSub
 		  // Check if this event has any subscribers
 		  If Not mSubscriptions.HasKey(eventName) Then Return
 		  
-		  Dim eventDict As Dictionary = mSubscriptions.Value(eventName)
+		  Var eventDict As Dictionary = mSubscriptions.Value(eventName)
 		  
 		  // Loop through all subscribed targets
 		  For Each target As Object In eventDict.Keys
 		    // Get callbacks for this target
-		    Dim callbacks() As String = eventDict.Value(target)
+		    Var callbacks() As String = eventDict.Value(target)
 		    
 		    // Call each callback method on the target
 		    For Each callbackName As String In callbacks
 		      Try
-		        Dim ti As Introspection.TypeInfo = Introspection.GetType(target)
-		        Dim methods() As Introspection.MethodInfo = ti.GetMethods
+		        Var ti As Introspection.TypeInfo = Introspection.GetType(target)
+		        Var methods() As Introspection.MethodInfo = ti.GetMethods
 		        
 		        For Each mi As Introspection.MethodInfo In methods
 		          If mi.Name = callbackName Then
 		            // Call with or without parameter depending on method signature
-		            Dim params() As Introspection.ParameterInfo = mi.GetParameters
+		            Var params() As Introspection.ParameterInfo = mi.GetParameters
 		            If params.Count = 0 Then
 		              mi.Invoke(target)
 		            Else
 		              // Pass parameters as an array
-		              Dim args() As Variant
+		              Var args() As Variant
 		              args.Add(data)
 		              mi.Invoke(target, args)
 		            End If
@@ -62,7 +62,7 @@ Protected Module PubSub
 		  If mSubscriptions = Nil Then mSubscriptions = New Dictionary
 		  
 		  // Get or create the event dictionary
-		  Dim eventDict As Dictionary
+		  Var eventDict As Dictionary
 		  If mSubscriptions.HasKey(eventName) Then
 		    eventDict = mSubscriptions.Value(eventName)
 		  Else
@@ -71,7 +71,7 @@ Protected Module PubSub
 		  End If
 		  
 		  // Get or create the target's callback array
-		  Dim callbacks() As String
+		  Var callbacks() As String
 		  
 		  If eventDict.HasKey(target) Then
 		    callbacks = eventDict.Value(target)
@@ -98,7 +98,7 @@ Protected Module PubSub
 		  // Check if event exists
 		  If Not mSubscriptions.HasKey(eventName) Then Return
 		  
-		  Dim eventDict As Dictionary = mSubscriptions.Value(eventName)
+		  Var eventDict As Dictionary = mSubscriptions.Value(eventName)
 		  
 		  // Check if target exists for this event
 		  If Not eventDict.HasKey(target) Then Return
@@ -108,8 +108,8 @@ Protected Module PubSub
 		    eventDict.Remove(target)
 		  Else
 		    // Remove specific callback
-		    Dim callbacks() As String = eventDict.Value(target)
-		    Dim newCallbacks() As String
+		    Var callbacks() As String = eventDict.Value(target)
+		    Var newCallbacks() As String
 		    
 		    For Each cb As String In callbacks
 		      If cb <> callbackMethod Then
